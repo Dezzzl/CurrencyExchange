@@ -33,5 +33,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
-src/main/webapp
 /src/main/webapp/
