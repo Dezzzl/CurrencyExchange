@@ -48,7 +48,10 @@ public class ExchangeRateServlet extends HttpServlet {
                 objectMapper.writeValue(resp.getWriter(), exchangeRate.get());
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            resp.setStatus(SC_INTERNAL_SERVER_ERROR);
+            objectMapper.writeValue(resp.getWriter(), new ResponseError(
+                    SC_INTERNAL_SERVER_ERROR,
+                    "the database is unavailable"));
         }
 
     }

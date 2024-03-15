@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import static jakarta.servlet.http.HttpServletResponse.*;
 import static jakarta.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
 @WebServlet("/currencies")
@@ -26,6 +27,7 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             List<Currency> allCurrencies = currencyService.findAll();
+            resp.setStatus(SC_OK);
             objectMapper.writeValue(resp.getWriter(), allCurrencies);
         } catch (SQLException e) {
             resp.setStatus(SC_INTERNAL_SERVER_ERROR);
@@ -42,23 +44,23 @@ public class CurrenciesServlet extends HttpServlet {
         String code = req.getParameter("code");
         String sign = req.getParameter("sign");
         if (name==null){
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "the name of the currency is not specified"));
             return;
         }
         if (code==null){
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "the currency code is not specified"));
             return;
         }
         if (sign==null){
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "the currency sign is not specified"
             ));
             return;
@@ -67,14 +69,14 @@ public class CurrenciesServlet extends HttpServlet {
             Currency currency = new Currency(code, name, sign);
             Optional<Currency> optionalCurrency = currencyService.save(currency);
             if (optionalCurrency.isEmpty()){
-                resp.setStatus(HttpServletResponse.SC_CONFLICT);
+                resp.setStatus(SC_CONFLICT);
                 objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                        HttpServletResponse.SC_CONFLICT,
+                        SC_CONFLICT,
                         "A currency with this code already exists"
                 ));
             }
             else {
-                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.setStatus(SC_CREATED);
                 objectMapper.writeValue(resp.getWriter(), optionalCurrency.get());
             }
         } catch (SQLException e) {

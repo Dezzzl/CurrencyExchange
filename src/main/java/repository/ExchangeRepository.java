@@ -5,6 +5,7 @@ import entity.ExchangeRate;
 import lombok.NoArgsConstructor;
 import util.ConnectionManager;
 
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class ExchangeRepository implements CrudRepository<Integer, ExchangeRate>
     private ExchangeRate buildExchangeRate(ResultSet resultSet) throws SQLException {
         return ExchangeRate.builder()
                 .id(resultSet.getInt("id"))
-                .rate(resultSet.getBigDecimal("rate"))
+                .rate(resultSet.getBigDecimal("rate").setScale(2, RoundingMode.HALF_UP))
                 .baseCurrency(new Currency(
                         resultSet.getInt("base_id"),
                         resultSet.getString("base_code"),

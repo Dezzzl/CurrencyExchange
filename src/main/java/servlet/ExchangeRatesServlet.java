@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import static jakarta.servlet.http.HttpServletResponse.*;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 @WebServlet("/exchangeRates")
@@ -32,10 +33,12 @@ public class ExchangeRatesServlet extends HttpServlet {
         try {
             resp.setStatus(SC_OK);
             List<ExchangeRate> exchangeRates = exchangeService.findAll();
+            resp.setStatus(SC_OK);
             objectMapper.writeValue(resp.getWriter(), exchangeRates);
         } catch (SQLException e) {
+            resp.setStatus(SC_INTERNAL_SERVER_ERROR);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    SC_INTERNAL_SERVER_ERROR,
                     "the database is unavailable"
             ));
         }
@@ -49,22 +52,25 @@ public class ExchangeRatesServlet extends HttpServlet {
         String targetCurrencyCode = req.getParameter("targetCurrencyCode");
         String rate = req.getParameter("rate");
         if (baseCurrencyCode == null) {
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "Missing form field baseCurrencyCode"
             ));
             return;
         }
         if (targetCurrencyCode == null) {
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "Missing form field targetCurrencyCode"
             ));
             return;
         }
         if (rate == null) {
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "Missing form field rate."
             ));
             return;
@@ -74,8 +80,9 @@ public class ExchangeRatesServlet extends HttpServlet {
             exchangeRate = new BigDecimal(rate);
         }
         catch (NumberFormatException e){
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "Incorrect format of rate"
             ));
             return;
@@ -84,15 +91,17 @@ public class ExchangeRatesServlet extends HttpServlet {
             Optional<Currency> baseCurrencyOptional = currencyService.findByCode(baseCurrencyCode);
             Optional<Currency> targetCurrencyOptional = currencyService.findByCode(targetCurrencyCode);
             if (baseCurrencyOptional.isEmpty() || targetCurrencyOptional.isEmpty()) {
+                resp.setStatus(SC_NOT_FOUND);
                 objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                        HttpServletResponse.SC_NOT_FOUND,
+                        SC_NOT_FOUND,
                         "Currency does not exist in the database"
                 ));
             } else {
                 Optional<ExchangeRate> save = exchangeService.save(baseCurrencyOptional.get(), targetCurrencyOptional.get(), exchangeRate);
                 if (save.isEmpty()) {
+                    resp.setStatus(SC_CONFLICT);
                     objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                            HttpServletResponse.SC_CONFLICT,
+                            SC_CONFLICT,
                             "Currency pair exists"
                     ));
                 } else {
@@ -101,14 +110,16 @@ public class ExchangeRatesServlet extends HttpServlet {
                 }
             }
         } catch (SQLException e) {
+            resp.setStatus(SC_INTERNAL_SERVER_ERROR);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Database unavailable"
+                    SC_INTERNAL_SERVER_ERROR,
+                    "the database is unavailable"
             ));
         }
         catch (SameCurrencyExchangeException e){
+            resp.setStatus(SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    SC_BAD_REQUEST,
                     "Identical currencies"
             ));
         }

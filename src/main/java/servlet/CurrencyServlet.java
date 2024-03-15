@@ -34,6 +34,7 @@ public class CurrencyServlet extends HttpServlet {
         try {
             Optional<Currency> currencyOptional = currencyService.findByCode(code);
             if(currencyOptional.isEmpty()){
+                resp.setStatus(SC_NOT_FOUND);
                 objectMapper.writeValue(resp.getWriter(), new ResponseError(
                         SC_NOT_FOUND,
                         "The currency was not found"
@@ -43,6 +44,7 @@ public class CurrencyServlet extends HttpServlet {
                 objectMapper.writeValue(resp.getWriter(), currencyOptional.get());
             }
         } catch (SQLException e) {
+            resp.setStatus(SC_INTERNAL_SERVER_ERROR);
             objectMapper.writeValue(resp.getWriter(), new ResponseError(
                     SC_INTERNAL_SERVER_ERROR,
                     "the database is unavailable"
